@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Processing Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #logs { background: #f5f5f5; padding: 15px; margin-top: 20px; height: 300px; overflow-y: auto; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #007bff; border-radius: 50%; 
+                 width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1>Generating Report for {{ politician_name }}</h1>
+    <div class="loader"></div>
+    <p>This may take 1-2 minutes. Please wait...</p>
+    <div id="logs"></div>
+
+    <script>
+        const eventSource = new EventSource("/logs");
+        eventSource.onmessage = function(e) {
+            const logElement = document.createElement('div');
+            logElement.textContent = e.data.replace('data: ', '');
+            document.getElementById('logs').appendChild(logElement);
+        };
+
+        // Check status every 3 seconds
+        setInterval(() => {
+            fetch("/check_status/{{ politician_name }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'complete') {
+                        window.location.href = "/view_report/{{ politician_name }}";
+                    }
+                });
+        }, 3000);
+    </script>
+</body>
+</html>
